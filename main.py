@@ -1,33 +1,22 @@
-import os
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+import time
 
-BASE_URL = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
-OUTPUT_DIR = "data"
+download_speeds = []
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+def format_seconds(seconds):
+    """Format seconds as H:M:S."""
+    mins, secs = divmod(int(seconds), 60)
+    hours, mins = divmod(mins, 60)
+    return f"{hours:02}:{mins:02}:{secs:02}"
 
-def get_links(url):
-    """Get all valid href links from a directory page."""
-    print(f"[SCAN] {url}")
-    response = requests.get(url)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'html.parser')
-    links = []
-    for a in soup.find_all('a', href=True):
-        href = a['href']
-        if href.startswith('?') or href.startswith('/'):
-            continue
-        if href in ('../', 'Parent Directory'):
-            continue
-        links.append(href)
-    return links
+def get_avg_speed():
+    """Return average speed in MB/s."""
+    if not download_speeds:
+        return 0
+    return sum(download_speeds) / len(download_speeds)
 
 def download_file(url, save_path):
     """Download file if not present or if size mismatch."""
     try:
-        # Get remote file size via HEAD
         head = requests.head(url, allow_redirects=True, timeout=10)
         head.raise_for_status()
         remote_size = int(head.headers.get("Content-Length", 0))
@@ -44,30 +33,24 @@ def download_file(url, save_path):
             print(f"[RE-DOWNLOAD] {save_path} (size mismatch)")
 
     print(f"[DOWNLOAD] {url}")
+    start_time = time.time()
+
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
         with open(save_path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
-    print(f"[DONE] Saved to: {save_path}")
 
-def crawl_and_download(current_url, relative_path=""):
-    """Recursively crawl and download all files from directory."""
-    print(f"\n[CRAWLING] {current_url}")
-    links = get_links(current_url)
+    elapsed = time.time() - start_time
+    downloaded_mb = os.path.getsize(save_path) / (1024 * 1024)
+    speed = downloaded_mb / elapsed
+    download_speeds.append(speed)
 
-    for link in links:
-        full_url = urljoin(current_url, link)
-        if link.endswith("/"):
-            print(f"[ENTER DIR] {full_url}")
-            sub_path = os.path.join(relative_path, link.strip('/'))
-            crawl_and_download(full_url, sub_path)
-        else:
-            print(f"[FOUND FILE] {link}")
-            local_folder = os.path.join(OUTPUT_DIR, relative_path)
-            os.makedirs(local_folder, exist_ok=True)
-            file_path = os.path.join(local_folder, link)
-            download_file(full_url, file_path)
+    print(f"[DONE] Saved to: {save_path} — {downloaded_mb:.2f} MB in {elapsed:.2f}s ({speed:.2f} MB/s)")
 
-if __name__ == "__main__":
-    crawl_and_download(BASE_URL)
+    # Show average and estimate
+    if remote_size:
+        avg_speed = get_avg_speed()
+        remaining_files = '?'  # Could estimate if you pass a count
+        est_time = format_seconds((remote_size / (1024 * 1024)) / avg_speed)
+        print(f"[ESTIMATE] Avg Speed: {avg_speed:.2f} MB/s — Estimated time for similar files: {est_time}")
