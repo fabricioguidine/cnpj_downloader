@@ -1,7 +1,7 @@
 import os
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 BASE_URL = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
 OUTPUT_DIR = "data"
@@ -9,7 +9,7 @@ OUTPUT_DIR = "data"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def get_links(url):
-    """Get all href links from a directory page, excluding query strings and parent links."""
+    """Get all valid href links from a directory page."""
     print(f"[SCAN] {url}")
     response = requests.get(url)
     response.raise_for_status()
@@ -25,10 +25,24 @@ def get_links(url):
     return links
 
 def download_file(url, save_path):
-    """Download a file to disk, skipping if already exists."""
+    """Download file if not present or if size mismatch."""
+    try:
+        # Get remote file size via HEAD
+        head = requests.head(url, allow_redirects=True, timeout=10)
+        head.raise_for_status()
+        remote_size = int(head.headers.get("Content-Length", 0))
+    except Exception as e:
+        print(f"[ERROR] Could not get remote size: {e}")
+        remote_size = None
+
     if os.path.exists(save_path):
-        print(f"[SKIP] Already downloaded: {save_path}")
-        return
+        local_size = os.path.getsize(save_path)
+        if remote_size and local_size == remote_size:
+            print(f"[SKIP] {save_path} already downloaded (size matches)")
+            return
+        else:
+            print(f"[RE-DOWNLOAD] {save_path} (size mismatch)")
+
     print(f"[DOWNLOAD] {url}")
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
@@ -38,7 +52,7 @@ def download_file(url, save_path):
     print(f"[DONE] Saved to: {save_path}")
 
 def crawl_and_download(current_url, relative_path=""):
-    """Recursively go into directories and download all files."""
+    """Recursively crawl and download all files from directory."""
     print(f"\n[CRAWLING] {current_url}")
     links = get_links(current_url)
 
@@ -54,7 +68,6 @@ def crawl_and_download(current_url, relative_path=""):
             os.makedirs(local_folder, exist_ok=True)
             file_path = os.path.join(local_folder, link)
             download_file(full_url, file_path)
-
 
 if __name__ == "__main__":
     crawl_and_download(BASE_URL)
