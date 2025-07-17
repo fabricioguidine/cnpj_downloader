@@ -10,12 +10,27 @@ This Python script automates the download of **all public CNPJ datasets** availa
 
 The Receita Federal updates these CNPJ datasets **monthly**, usually publishing a new folder (e.g., `2025-07/`) each month. This script is designed to detect and download new folders automatically on re-run.
 
+---
+
+## ⏱️ Download Speed & Time Estimation
+
+This script now tracks:
+
+- ⏱️ Download duration for each file
+- 📊 Average download speed (MB/s)
+- 🧮 Estimated time to download similar files
+
+This helps monitor your progress and ensure downloads are completing efficiently.
+
+---
+
 ## 🚀 Features
 
 - ✅ Recursively crawls every monthly folder
 - ✅ Downloads all files inside each folder
-- ✅ Skips already downloaded files
+- ✅ Skips already downloaded files if size matches
 - ✅ Preserves original folder structure
+- ✅ Shows real-time download metrics and ETA
 - ✅ Uses only `requests` and `BeautifulSoup` (no browser automation needed)
 
 ---
@@ -29,6 +44,23 @@ This is because the script checks if the file **exists** before downloading it �
 To avoid this:
 - Delete any incomplete files manually before restarting the script
 - Or enhance the script to verify file size or checksum after download (not included by default)
+
+---
+
+## 📁 GitHub Repository Tip
+
+If you're adding this project to GitHub, avoid pushing the `data/` directory (which can contain many large files). To do that, add this to your `.gitignore` file:
+
+```
+data/
+```
+
+If you want to keep the empty `data/` folder structure in the repo, create a `.gitkeep` file inside it and update `.gitignore` like this:
+
+```
+data/*
+!data/.gitkeep
+```
 
 ---
 
@@ -63,21 +95,6 @@ cnpj_downloader/
 ```
 
 ---
-
-## 📁 GitHub Repository Tip
-
-If you're adding this project to GitHub, avoid pushing the `data/` directory (which can contain many large files). To do that, add this to your `.gitignore` file:
-
-```
-data/
-```
-
-If you want to keep the empty `data/` folder structure in the repo, create a `.gitkeep` file inside it and update `.gitignore` like this:
-
-```
-data/*
-!data/.gitkeep
-```
 
 ## 🖥️ How to Use
 
