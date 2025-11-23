@@ -1,132 +1,260 @@
-# 📦 CNPJ Downloader — Receita Federal CNPJ Open Data Scraper
+# CNPJ Downloader
 
-This Python script automates the download of **all public CNPJ datasets** available on the Receita Federal website. It crawls through each dated directory and downloads **every available file** (.zip, .txt, etc.), saving them in a structured local folder.
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com/fabricioguidine/cnpj_downloader)
 
-> 🔗 Source: [Receita Federal - Dados Abertos CNPJ](https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/)
+A Python tool to automatically download CNPJ (Brazilian company registration) datasets from the Receita Federal's open data portal. This tool recursively crawls through monthly directories and downloads all available files, preserving the original folder structure.
 
----
+## 📋 Table of Contents
 
-## 📅 Update Frequency
+- [Overview](#overview)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
 
-The Receita Federal updates these CNPJ datasets **monthly**, usually publishing a new folder (e.g., `2025-07/`) each month. This script is designed to detect and download new folders automatically on re-run.
+## Overview
 
----
+The CNPJ Downloader automates the process of downloading public CNPJ datasets from the [Receita Federal - Dados Abertos CNPJ](https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/) website. The Receita Federal updates these datasets monthly, and this tool is designed to detect and download new folders automatically.
 
-## ⏱️ Download Speed & Time Estimation
+### Data Source
 
-This script now tracks:
+> 🔗 **Source**: [Receita Federal - Dados Abertos CNPJ](https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/)
 
-- ⏱️ Download duration for each file
-- 📊 Average download speed (MB/s)
-- 🧮 Estimated time to download similar files
+### Update Frequency
 
-This helps monitor your progress and ensure downloads are completing efficiently.
+The Receita Federal updates CNPJ datasets **monthly**, typically publishing a new folder (e.g., `2025-07/`) each month. This script automatically detects and downloads new folders on re-run.
 
----
+## Features
 
-## 🚀 Features
+- ✅ **Recursive Crawling**: Automatically crawls through all monthly directories
+- ✅ **Smart Download**: Skips already downloaded files if size matches
+- ✅ **Resume Capability**: Re-downloads incomplete or corrupted files
+- ✅ **Progress Tracking**: Real-time download metrics and speed estimation
+- ✅ **Structure Preservation**: Maintains original folder hierarchy
+- ✅ **Error Handling**: Robust error handling with automatic retry logic
+- ✅ **Lightweight**: Uses only `requests` and `BeautifulSoup` (no browser automation)
 
-- ✅ Recursively crawls every monthly folder
-- ✅ Downloads all files inside each folder
-- ✅ Skips already downloaded files if size matches
-- ✅ Preserves original folder structure
-- ✅ Shows real-time download metrics and ETA
-- ✅ Uses only `requests` and `BeautifulSoup` (no browser automation needed)
+## Prerequisites
 
----
+- Python 3.8 or higher
+- pip (Python package installer)
+- Internet connection
+- Sufficient disk space for downloaded files
 
-## ⚠️ Important Limitation
+## Installation
 
-> 💡 If the script is **interrupted during a file download** (e.g., closed, killed, or lost connection), that **partial file will still be skipped** the next time you run it.
-
-This is because the script checks if the file **exists** before downloading it — it doesn’t verify if the file is **complete or corrupted**.
-
-To avoid this:
-- Delete any incomplete files manually before restarting the script
-- Or enhance the script to verify file size or checksum after download (not included by default)
-
----
-
-## 📁 GitHub Repository Tip
-
-If you're adding this project to GitHub, avoid pushing the `data/` directory (which can contain many large files). To do that, add this to your `.gitignore` file:
-
-```
-data/
-```
-
-If you want to keep the empty `data/` folder structure in the repo, create a `.gitkeep` file inside it and update `.gitignore` like this:
-
-```
-data/*
-!data/.gitkeep
-```
-
----
-
-## 🛠️ Requirements
-
-Install dependencies:
+### Option 1: Using pip (Recommended)
 
 ```bash
+# Clone the repository
+git clone https://github.com/fabricioguidine/cnpj_downloader.git
+cd cnpj_downloader
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-Contents of `requirements.txt`:
+### Option 2: Install as a package
 
-```
-requests
-beautifulsoup4
-```
+```bash
+# Install in development mode
+pip install -e .
 
----
-
-## 🧩 Project Structure
-
-```
-cnpj_downloader/
-├── main.py               # Main script
-├── requirements.txt      # Python dependencies
-├── README.md             # Project documentation
-└── data/                 # Where files are saved
-    ├── 2025-06/
-    ├── 2025-05/
-    └── ...
+# Or install directly
+pip install .
 ```
 
----
+## Usage
 
-## 🖥️ How to Use
+### Basic Usage
 
-1. Clone this repo or copy the files.
-2. Run the script:
+Run the downloader with default settings:
 
 ```bash
 python main.py
 ```
 
-All files will be downloaded into the `data/` folder, organized by month.
+### Custom Configuration
+
+You can customize the output directory using environment variables:
+
+```bash
+# Set custom output directory
+export CNPJ_OUTPUT_DIR=/path/to/your/data
+python main.py
+```
+
+### Programmatic Usage
+
+```python
+from src.manager import CNPJDownloaderManager
+
+# Create manager with custom settings
+manager = CNPJDownloaderManager(
+    base_url="https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/",
+    output_dir="custom_data_dir"
+)
+
+# Start downloading
+manager.run()
+```
+
+## Architecture
+
+The project follows a modular architecture with clear separation of concerns:
+
+```
+┌─────────────────┐
+│   main.py       │  Entry point
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Manager       │  Orchestrates crawling and downloading
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    ▼         ▼
+┌─────────┐ ┌──────────┐
+│ Crawler │ │Downloader│  Core functionality
+└─────────┘ └──────────┘
+    │         │
+    └────┬────┘
+         ▼
+┌─────────────────┐
+│  Config & Utils │  Configuration and utilities
+└─────────────────┘
+```
+
+### Components
+
+- **Manager**: Orchestrates the overall download process
+- **Crawler**: Handles web crawling and link discovery
+- **Downloader**: Manages file downloads with progress tracking
+- **Config**: Centralized configuration management
+- **Utils**: Utility functions for formatting and calculations
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CNPJ_OUTPUT_DIR` | Output directory for downloaded files | `data` |
+
+### Configuration File
+
+You can modify settings in `src/config.py`:
+
+```python
+BASE_URL = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
+OUTPUT_DIR = "data"
+REQUEST_TIMEOUT = 15
+HEAD_TIMEOUT = 10
+CHUNK_SIZE = 8192
+```
+
+## Project Structure
+
+```
+cnpj_downloader/
+├── src/
+│   ├── __init__.py          # Package initialization
+│   ├── config.py            # Configuration settings
+│   ├── crawler.py           # Web crawling logic
+│   ├── downloader.py        # File download logic
+│   ├── manager.py           # Main orchestration
+│   └── utils.py             # Utility functions
+├── data/                    # Downloaded files (git-ignored)
+│   ├── .gitkeep
+│   ├── 2025-06/
+│   ├── 2025-05/
+│   └── ...
+├── main.py                  # Entry point
+├── requirements.txt         # Python dependencies
+├── setup.py                 # Package setup
+├── .gitignore              # Git ignore rules
+└── README.md               # This file
+```
+
+## Performance
+
+### Download Speed Tracking
+
+The tool tracks:
+- ⏱️ Download duration for each file
+- 📊 Average download speed (MB/s)
+- 🧮 Estimated time to download similar files
+
+This helps monitor progress and ensure downloads complete efficiently.
+
+### Limitations
+
+> ⚠️ **Important**: If the script is interrupted during a file download (e.g., closed, killed, or lost connection), that partial file will be re-downloaded on the next run. The script checks file size to detect incomplete downloads.
+
+## Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Setup
+
+```bash
+# Clone and setup
+git clone https://github.com/fabricioguidine/cnpj_downloader.git
+cd cnpj_downloader
+pip install -r requirements.txt
+
+# Make your changes and test
+python main.py
+```
+
+### Code Style
+
+- Follow PEP 8 style guidelines
+- Use type hints where applicable
+- Add docstrings to functions and classes
+- Keep functions focused and modular
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+### Issues
+
+If you encounter any issues or have questions:
+
+1. Check existing [Issues](https://github.com/fabricioguidine/cnpj_downloader/issues)
+2. Create a new issue with:
+   - Description of the problem
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - Python version and OS
+
+### Questions
+
+For questions or discussions, please open a [Discussion](https://github.com/fabricioguidine/cnpj_downloader/discussions).
+
+## Acknowledgments
+
+- [Receita Federal](https://www.gov.br/receitafederal) for providing open CNPJ data
+- Contributors and users of this project
 
 ---
 
-## 💡 Customization Tips
-
-Want to enhance the script?
-
-- ✅ **Download only `.zip`**: add a filter in the loop
-- ✅ **Unzip after download**: integrate with `zipfile` or `shutil`
-- ✅ **Add logging or CSV reports**: use Python `logging` or `csv` modules
-- ✅ **Verify file integrity**: check file size or hash to avoid partial downloads
-
----
-
-## 📄 License
-
-This script is open-source and free to use for personal or research purposes. Use it responsibly in accordance with Receita Federal’s data usage policies.
-
----
-
-## ✨ Author
-
-Made by [Your Name Here]  
-Feel free to contribute or suggest improvements!
+**Note**: This tool is for educational and research purposes. Please use it responsibly and in accordance with Receita Federal's data usage policies.
