@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com/fabricioguidine/cnpj_downloader)
+[![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com/fabricioguidine/cnpj-downloader)
 
 A Python tool to automatically download CNPJ (Brazilian company registration) datasets from the Receita Federal's open data portal. This tool recursively crawls through monthly directories and downloads all available files, preserving the original folder structure.
 
@@ -55,8 +55,8 @@ The Receita Federal updates CNPJ datasets **monthly**, typically publishing a ne
 
 ```bash
 # Clone the repository
-git clone https://github.com/fabricioguidine/cnpj_downloader.git
-cd cnpj_downloader
+git clone https://github.com/fabricioguidine/cnpj-downloader.git
+cd cnpj-downloader
 
 # Install dependencies
 pip install -r requirements.txt
@@ -165,7 +165,7 @@ CHUNK_SIZE = 8192
 ## Project Structure
 
 ```
-cnpj_downloader/
+cnpj-downloader/
 ├── src/
 │   ├── __init__.py          # Package initialization
 │   ├── config.py            # Configuration settings
@@ -214,8 +214,8 @@ We welcome contributions! Please follow these steps:
 
 ```bash
 # Clone and setup
-git clone https://github.com/fabricioguidine/cnpj_downloader.git
-cd cnpj_downloader
+git clone https://github.com/fabricioguidine/cnpj-downloader.git
+cd cnpj-downloader
 pip install -r requirements.txt
 
 # Make your changes and test
@@ -239,7 +239,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-1. Check existing [Issues](https://github.com/fabricioguidine/cnpj_downloader/issues)
+1. Check existing [Issues](https://github.com/fabricioguidine/cnpj-downloader/issues)
 2. Create a new issue with:
    - Description of the problem
    - Steps to reproduce
@@ -248,7 +248,7 @@ If you encounter any issues or have questions:
 
 ### Questions
 
-For questions or discussions, please open a [Discussion](https://github.com/fabricioguidine/cnpj_downloader/discussions).
+For questions or discussions, please open a [Discussion](https://github.com/fabricioguidine/cnpj-downloader/discussions).
 
 ## Acknowledgments
 

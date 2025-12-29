@@ -124,3 +124,4 @@ class Downloader:
         """
         return calculate_average_speed(self.download_speeds)
 
+

@@ -16,7 +16,7 @@ setup(
     description="A tool to download CNPJ datasets from Receita Federal",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/fabricioguidine/cnpj_downloader",
+    url="https://github.com/fabricioguidine/cnpj-downloader",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -37,4 +37,5 @@ setup(
         ],
     },
 )
+
 

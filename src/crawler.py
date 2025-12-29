@@ -66,3 +66,4 @@ class Crawler:
         """
         return urljoin(base_url, link)
 
+

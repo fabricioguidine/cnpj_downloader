@@ -66,3 +66,4 @@ class CNPJDownloaderManager:
         print(f"[CONFIG] Output Directory: {self.output_dir}")
         self.crawl_and_download()
 
+
