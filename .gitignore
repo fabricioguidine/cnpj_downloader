@@ -43,3 +43,16 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Test and tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Claude
+CLAUDE.md
+
