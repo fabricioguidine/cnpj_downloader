@@ -1,4 +1,5 @@
 """Tests for `src.crawler.Crawler` URL handling and link extraction."""
+
 from unittest.mock import MagicMock, patch
 
 from src.crawler import Crawler

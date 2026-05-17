@@ -1,6 +1,7 @@
 """
 Main entry point for CNPJ Downloader.
 """
+
 from src.manager import CNPJDownloaderManager
 
 

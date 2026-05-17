@@ -1,4 +1,5 @@
 """Tests for `src.utils` pure helper functions."""
+
 import pytest
 
 from src.utils import calculate_average_speed, format_file_size, format_seconds

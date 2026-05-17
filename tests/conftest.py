@@ -1,4 +1,5 @@
 """Pytest configuration: ensure project root is importable as `src.*`."""
+
 import sys
 from pathlib import Path
 
