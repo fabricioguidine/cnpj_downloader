@@ -1,55 +1,57 @@
-"""Tests for `src.crawler.Crawler` URL handling and link extraction."""
-
-from unittest.mock import MagicMock, patch
-
+"""Tests for src.crawler link discovery (network mocked)."""
 from src.crawler import Crawler
 
 
-def test_build_full_url_joins_relative_link():
-    crawler = Crawler("https://example.com/root/")
-    assert (
-        crawler.build_full_url("https://example.com/root/", "sub/")
-        == "https://example.com/root/sub/"
+class _FakeResponse:
+    def __init__(self, text, status_ok=True):
+        self.text = text
+        self._ok = status_ok
+
+    def raise_for_status(self):
+        if not self._ok:
+            raise RuntimeError("HTTP error")
+
+
+LISTING = """
+<html><body>
+<a href="?C=N;O=D">Name</a>
+<a href="/">root</a>
+<a href="../">Parent Directory</a>
+<a href="2025-05/">2025-05/</a>
+<a href="2025-06/">2025-06/</a>
+<a href="Empresas0.zip">Empresas0.zip</a>
+<a href="readme.txt">readme.txt</a>
+</body></html>
+"""
+
+
+def test_get_links_filters_navigation(monkeypatch):
+    crawler = Crawler("https://example.test/CNPJ/")
+    monkeypatch.setattr(
+        "src.crawler.requests.get",
+        lambda url, timeout=None: _FakeResponse(LISTING),
     )
+    links = crawler.get_links("https://example.test/CNPJ/")
+    assert links == ["2025-05/", "2025-06/", "Empresas0.zip", "readme.txt"]
 
 
-def test_build_full_url_handles_file():
-    crawler = Crawler("https://example.com/")
+def test_get_links_returns_empty_on_error(monkeypatch):
+    crawler = Crawler("https://example.test/CNPJ/")
+
+    def boom(url, timeout=None):
+        raise ConnectionError("no network")
+
+    monkeypatch.setattr("src.crawler.requests.get", boom)
+    assert crawler.get_links("https://example.test/CNPJ/") == []
+
+
+def test_build_full_url():
+    crawler = Crawler("https://example.test/CNPJ/")
     assert (
-        crawler.build_full_url("https://example.com/dir/", "file.zip")
-        == "https://example.com/dir/file.zip"
+        crawler.build_full_url("https://example.test/CNPJ/", "2025-05/")
+        == "https://example.test/CNPJ/2025-05/"
     )
-
-
-@patch("src.crawler.requests.get")
-def test_get_links_filters_navigation_entries(mock_get):
-    html = """
-    <html><body>
-      <a href="?C=N;O=D">Sort</a>
-      <a href="/">Root</a>
-      <a href="../">Parent Directory</a>
-      <a href="2025-01/">2025-01/</a>
-      <a href="readme.txt">readme.txt</a>
-    </body></html>
-    """
-    response = MagicMock()
-    response.text = html
-    response.raise_for_status = MagicMock()
-    mock_get.return_value = response
-
-    crawler = Crawler("https://example.com/")
-    links = crawler.get_links("https://example.com/")
-
-    assert "2025-01/" in links
-    assert "readme.txt" in links
-    assert "?C=N;O=D" not in links
-    assert "/" not in links
-    assert "../" not in links
-
-
-@patch("src.crawler.requests.get")
-def test_get_links_returns_empty_on_error(mock_get):
-    mock_get.side_effect = Exception("network down")
-
-    crawler = Crawler("https://example.com/")
-    assert crawler.get_links("https://example.com/") == []
+    assert (
+        crawler.build_full_url("https://example.test/CNPJ/2025-05/", "Empresas0.zip")
+        == "https://example.test/CNPJ/2025-05/Empresas0.zip"
+    )

@@ -1,119 +1,110 @@
-# CNPJ Downloader
+<div align="center">
+
+<img src=".github/assets/banner.svg" alt="cnpj-downloader" width="100%">
 
 [![CI](https://github.com/fabricioguidine/cnpj-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/fabricioguidine/cnpj-downloader/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com/fabricioguidine/cnpj-downloader)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#requirements)
 
-A Python tool to automatically download CNPJ (Brazilian company registration) datasets from the Receita Federal's open data portal. It recursively crawls the monthly directories and downloads all available files, preserving the original folder structure.
+</div>
 
-> **Cross-platform:** runs on Linux, macOS, and Windows — all paths use `pathlib`, all text I/O is UTF-8, and the full test suite runs on all three operating systems in CI.
+> Bulk downloader for Brazil's public CNPJ dataset (Receita Federal), with size-based skip and re-download of incomplete files.
+
+`cnpj-downloader` recursively crawls the Receita Federal open-data directory listing for the CNPJ dataset, mirroring its monthly folder structure to disk. It uses only `requests` and `BeautifulSoup` (no browser automation): it parses each HTML directory page for links, descends into subdirectories, and downloads every file it finds. Before each download it issues a `HEAD` request and compares `Content-Length` against the local file, skipping files already present at the expected size and re-downloading anything missing or incomplete. Per-file timing and average speed are reported as it runs.
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Features](#features)
-- [Prerequisites](#prerequisites)
+- [How it works](#how-it-works)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Testing](#testing)
-- [Architecture](#architecture)
 - [Configuration](#configuration)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
+- [Project structure](#project-structure)
 - [License](#license)
-
-## Overview
-
-The CNPJ Downloader automates downloading the public CNPJ datasets from
-[Receita Federal - Dados Abertos CNPJ](https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/).
-The Receita Federal updates these datasets **monthly**, typically publishing a new
-folder (e.g. `2025-07/`) each month. The tool detects and downloads new folders on
-re-run, skipping files that are already present and complete.
 
 ## Features
 
-- **Recursive crawling** of all monthly directories.
-- **Smart download** that skips files whose local size already matches the remote.
-- **Resume capability**: incomplete or corrupted files are re-downloaded.
-- **Progress tracking** with per-file metrics and average-speed estimation.
-- **Structure preservation**: the remote folder hierarchy is mirrored locally.
-- **Lightweight**: uses only `requests` and `BeautifulSoup` (no browser automation).
+- **Recursive crawling** — walks the entire directory listing, descending into every monthly subfolder.
+- **Structure preservation** — recreates the source folder hierarchy under the local output directory.
+- **Size-based skip** — issues a `HEAD` request and skips files whose local size already matches the remote `Content-Length`.
+- **Incomplete-file recovery** — files whose local size does not match the remote size are re-downloaded from scratch on the next run.
+- **Progress and speed reporting** — prints per-file duration, throughput (MB/s), and a rolling average-speed estimate.
+- **Streamed downloads** — writes in 8 KB chunks so large files do not need to fit in memory; partial files are removed on error.
+- **Lightweight** — depends only on `requests` and `beautifulsoup4`.
 
-## Prerequisites
+## How it works
 
-- Python 3.11 or higher
-- pip
-- Internet connection
-- Sufficient disk space for the downloaded files
-
-## Installation
-
-The same steps work on every platform; only the virtual-environment activation
-command differs.
-
-### Linux / macOS
-
-```bash
-git clone https://github.com/fabricioguidine/cnpj-downloader.git
-cd cnpj-downloader
-
-python3 -m venv .venv
-source .venv/bin/activate
-
-pip install -r requirements.txt
+```mermaid
+flowchart TD
+    A[Receita Federal<br/>dados_abertos_cnpj listing] --> B[Crawler<br/>parse HTML links]
+    B -->|directory| B
+    B -->|file| C[Downloader]
+    C --> D{HEAD: remote size<br/>== local size?}
+    D -->|yes| E[Skip]
+    D -->|no / missing| F[Stream download<br/>in 8 KB chunks]
+    F --> G[Local dataset<br/>mirrored folder tree]
+    E --> G
 ```
 
-### Windows (PowerShell)
+The `Manager` starts at the configured base URL and asks the `Crawler` for the links on that page. Each link ending in `/` is treated as a directory and crawled recursively; every other link is treated as a file and handed to the `Downloader`. The `Downloader` performs a `HEAD` request to learn the remote size, compares it to any existing local file, and either skips it or streams it to disk, reporting timing and speed via the helpers in `utils`.
+
+## Requirements
+
+- Python 3.8 or higher
+- Internet connection
+- Sufficient disk space for the CNPJ dataset (tens of GB when fully mirrored)
+
+Runtime dependencies: `requests`, `beautifulsoup4`.
+
+## Installation
 
 ```powershell
 git clone https://github.com/fabricioguidine/cnpj-downloader.git
 cd cnpj-downloader
 
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
+# Runtime dependencies only
 pip install -r requirements.txt
 ```
 
-### Install as a package
+Or install the package (exposes the `cnpj-downloader` console command):
 
-```bash
-# Editable / development install
+```powershell
 pip install -e .
+```
 
-# Or a regular install
-pip install .
+For development (linting, type-checking, tests):
+
+```powershell
+pip install -e ".[dev]"
 ```
 
 ## Usage
 
-### Basic usage
-
-```bash
-python main.py
-```
-
-### Custom output directory
-
-The output directory is configurable through the `CNPJ_OUTPUT_DIR` environment
-variable (default: `data`).
-
-Linux / macOS:
-
-```bash
-export CNPJ_OUTPUT_DIR=/path/to/your/data
-python main.py
-```
-
-Windows (PowerShell):
+Run with the default Receita Federal base URL and `data/` output directory:
 
 ```powershell
-$env:CNPJ_OUTPUT_DIR = "D:\path\to\your\data"
 python main.py
 ```
 
-### Programmatic usage
+If installed as a package, use the console entry point instead:
+
+```powershell
+cnpj-downloader
+```
+
+### Output directory
+
+The output directory is read from the `CNPJ_OUTPUT_DIR` environment variable (default: `data`):
+
+```powershell
+$env:CNPJ_OUTPUT_DIR = "D:\cnpj-data"
+python main.py
+```
+
+### Programmatic use
 
 ```python
 from src.manager import CNPJDownloaderManager
@@ -125,99 +116,38 @@ manager = CNPJDownloaderManager(
 manager.run()
 ```
 
-## Testing
-
-The test suite is hermetic and requires **no network access** — all HTTP calls are
-mocked and downloads are written to temporary directories, so it behaves
-identically on Linux, macOS, and Windows.
-
-Install the development dependencies and run the tests:
-
-```bash
-pip install -r requirements-dev.txt
-pytest -q
-```
-
-The tests cover URL/link parsing, path building, file-size/skip logic, the full
-recursive crawl-and-download flow, and the `main.py` entry point invoked as a real
-subprocess. Continuous integration runs them on Ubuntu, macOS, and Windows across
-Python 3.11, 3.12, and 3.13.
-
-## Architecture
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed description of the
-components, data flow, and cross-platform strategy. In short:
-
-```
-main.py  ->  CNPJDownloaderManager  ->  Crawler   (discover links)
-                                    ->  Downloader (fetch files)
-             Config / Utils         (settings and formatting helpers)
-```
+Re-running the tool is safe and incremental: already-complete files are skipped, new monthly folders are picked up automatically, and incomplete files are re-downloaded.
 
 ## Configuration
 
-### Environment variables
+Settings live in [`src/config.py`](src/config.py):
 
-| Variable          | Description                          | Default |
-|-------------------|--------------------------------------|---------|
-| `CNPJ_OUTPUT_DIR` | Output directory for downloaded files | `data`  |
+| Setting | Description | Default |
+|---|---|---|
+| `BASE_URL` | Directory listing to crawl | Receita Federal `dados_abertos_cnpj/` |
+| `OUTPUT_DIR` | Output directory (env `CNPJ_OUTPUT_DIR`) | `data` |
+| `REQUEST_TIMEOUT` | Timeout for listing requests (s) | `15` |
+| `HEAD_TIMEOUT` | Timeout for `HEAD` size checks (s) | `10` |
+| `CHUNK_SIZE` | Streaming chunk size (bytes) | `8192` |
 
-### Settings file
-
-Other settings live in `src/config.py`:
-
-```python
-BASE_URL = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
-OUTPUT_DIR = Path(os.getenv("CNPJ_OUTPUT_DIR", "data"))
-REQUEST_TIMEOUT = 15
-HEAD_TIMEOUT = 10
-CHUNK_SIZE = 8192
-```
-
-## Project Structure
+## Project structure
 
 ```
 cnpj-downloader/
+├── main.py              # Entry point
 ├── src/
-│   ├── __init__.py          # Package initialization
-│   ├── config.py            # Configuration settings
-│   ├── crawler.py           # Web crawling logic
-│   ├── downloader.py        # File download logic
-│   ├── manager.py           # Main orchestration
-│   └── utils.py             # Utility functions
-├── tests/                   # Hermetic, cross-platform test suite
-├── data/                    # Downloaded files (git-ignored)
-│   └── .gitkeep
-├── .github/workflows/ci.yml # CI matrix (OS x Python)
-├── main.py                  # Entry point
-├── requirements.txt         # Runtime dependencies
-├── requirements-dev.txt     # Test dependencies
-├── pyproject.toml           # Pytest configuration
-├── setup.py                 # Package setup
-└── README.md
+│   ├── config.py        # Base URL, output dir, timeouts, chunk size
+│   ├── crawler.py       # HTML link discovery (requests + BeautifulSoup)
+│   ├── downloader.py    # HEAD size check, streamed download, skip logic
+│   ├── manager.py       # Recursive crawl-and-download orchestration
+│   └── utils.py         # Speed/time/size formatting helpers
+├── tests/               # pytest suite
+├── data/                # Downloaded dataset (git-ignored)
+├── requirements.txt     # Runtime dependencies
+├── pyproject.toml       # Build, lint, test configuration
+└── setup.py             # Package setup
 ```
-
-## Performance
-
-The tool tracks download duration per file, average download speed (MB/s), and an
-estimated time for similarly sized files. If the script is interrupted mid-download,
-the partial file is detected (by size mismatch) and re-downloaded on the next run.
-
-## Contributing
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit your changes.
-4. Push the branch and open a Pull Request.
-
-Please follow PEP 8, use type hints where applicable, and keep functions focused.
-Run `pytest -q` before opening a PR.
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-**Note**: This tool is for educational and research purposes. Please use it
-responsibly and in accordance with Receita Federal's data usage policies.
+Released under the [MIT License](LICENSE).
