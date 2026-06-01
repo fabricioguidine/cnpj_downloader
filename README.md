@@ -1,11 +1,6 @@
 # CNPJ Downloader
 
-[![CI](https://github.com/fabricioguidine/cnpj-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/fabricioguidine/cnpj-downloader/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/fabricioguidine/cnpj-downloader/branch/main/graph/badge.svg)](https://codecov.io/gh/fabricioguidine/cnpj-downloader)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com/fabricioguidine/cnpj-downloader)
+[![CI](https://github.com/fabricioguidine/cnpj-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/fabricioguidine/cnpj-downloader/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/fabricioguidine/cnpj-downloader/branch/main/graph/badge.svg)](https://codecov.io/gh/fabricioguidine/cnpj-downloader) [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com/fabricioguidine/cnpj-downloader)
 
 A Python tool to automatically download CNPJ (Brazilian company registration) datasets from the Receita Federal's open data portal. This tool recursively crawls through monthly directories and downloads all available files, preserving the original folder structure.
 
