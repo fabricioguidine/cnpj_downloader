@@ -4,6 +4,7 @@ Both crawler and downloader do `import requests`, so they share one
 `requests` module object. The fakes therefore route on the call site:
 listing requests pass a `timeout` kwarg, file downloads pass `stream=True`.
 """
+
 from pathlib import Path
 
 from src.manager import CNPJDownloaderManager
@@ -14,8 +15,7 @@ from src.manager import CNPJDownloaderManager
 #   2025-05/ -> Estabelecimentos0.zip
 _LISTINGS = {
     "https://fake.test/cnpj/": (
-        '<a href="2025-05/">2025-05/</a>'
-        '<a href="Empresas0.zip">Empresas0.zip</a>'
+        '<a href="2025-05/">2025-05/</a><a href="Empresas0.zip">Empresas0.zip</a>'
     ),
     "https://fake.test/cnpj/2025-05/": (
         '<a href="Estabelecimentos0.zip">Estabelecimentos0.zip</a>'
@@ -96,5 +96,7 @@ def test_manager_recursive_crawl_and_download(tmp_path, monkeypatch):
 
 
 def test_manager_output_dir_is_path(tmp_path):
-    mgr = CNPJDownloaderManager(base_url="https://fake.test/cnpj/", output_dir=str(tmp_path))
+    mgr = CNPJDownloaderManager(
+        base_url="https://fake.test/cnpj/", output_dir=str(tmp_path)
+    )
     assert isinstance(mgr.output_dir, Path)

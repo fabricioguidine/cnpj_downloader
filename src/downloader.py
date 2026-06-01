@@ -1,6 +1,7 @@
 """
 File downloader module with progress tracking and resume capability.
 """
+
 import time
 from pathlib import Path
 from typing import List, Optional, Union
@@ -36,7 +37,9 @@ class Downloader:
             print(f"[ERROR] Could not get remote size: {e}")
             return None
 
-    def should_skip_download(self, file_path: Union[str, Path], remote_size: Optional[int]) -> bool:
+    def should_skip_download(
+        self, file_path: Union[str, Path], remote_size: Optional[int]
+    ) -> bool:
         """
         Check if a file should be skipped (already downloaded and complete).
 
@@ -104,7 +107,9 @@ class Downloader:
             avg_speed = calculate_average_speed(self.download_speeds)
             if remote_size and avg_speed > 0:
                 est_time = format_seconds((remote_size / (1024 * 1024)) / avg_speed)
-                print(f"[ESTIMATE] Avg Speed: {avg_speed:.2f} MB/s - Est. for similar: {est_time}")
+                print(
+                    f"[ESTIMATE] Avg Speed: {avg_speed:.2f} MB/s - Est. for similar: {est_time}"
+                )
 
             return True
 

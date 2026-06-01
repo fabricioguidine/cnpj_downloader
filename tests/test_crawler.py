@@ -1,4 +1,5 @@
 """Tests for src.crawler link discovery (network mocked)."""
+
 from src.crawler import Crawler
 
 

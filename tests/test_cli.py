@@ -7,6 +7,7 @@ synthetic listings and file bytes, so the whole pipeline (entry point ->
 manager -> crawler -> downloader -> filesystem) runs end to end with zero
 network access.
 """
+
 import os
 import subprocess
 import sys
@@ -14,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-_SHIM = r'''
+_SHIM = r"""
 import src.crawler as crawler
 import src.downloader as downloader
 
@@ -65,7 +66,7 @@ def _fake_head(url, allow_redirects=True, timeout=None):
 crawler.requests.get = _fake_get
 downloader.requests.get = _fake_get
 downloader.requests.head = _fake_head
-'''
+"""
 
 _RUNNER = (
     "import os\n"

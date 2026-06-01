@@ -1,4 +1,5 @@
 """Tests for src.utils formatting/calculation helpers."""
+
 import pytest
 
 from src.utils import format_seconds, calculate_average_speed, format_file_size
@@ -34,10 +35,10 @@ def test_calculate_average_speed_values():
         (512, "512.00 B"),
         (1024, "1.00 KB"),
         (1536, "1.50 KB"),
-        (1024 ** 2, "1.00 MB"),
-        (1024 ** 3, "1.00 GB"),
-        (1024 ** 4, "1.00 TB"),
-        (1024 ** 5, "1.00 PB"),
+        (1024**2, "1.00 MB"),
+        (1024**3, "1.00 GB"),
+        (1024**4, "1.00 TB"),
+        (1024**5, "1.00 PB"),
     ],
 )
 def test_format_file_size(size, expected):

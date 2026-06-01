@@ -1,4 +1,5 @@
 """Tests for src.downloader (network mocked, filesystem under tmp_path)."""
+
 from pathlib import Path
 
 
@@ -97,7 +98,9 @@ def test_download_file_skips_when_complete(tmp_path, monkeypatch):
 
     monkeypatch.setattr(
         "src.downloader.requests.head",
-        lambda url, allow_redirects=True, timeout=None: _FakeHeadResponse(len(b"already-here")),
+        lambda url, allow_redirects=True, timeout=None: _FakeHeadResponse(
+            len(b"already-here")
+        ),
     )
 
     def fail_get(*a, **k):

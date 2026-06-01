@@ -1,6 +1,7 @@
 """
 Main manager class that orchestrates crawling and downloading.
 """
+
 from pathlib import Path
 from typing import Optional
 
@@ -28,7 +29,9 @@ class CNPJDownloaderManager:
         # Ensure output directory exists
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def crawl_and_download(self, current_url: Optional[str] = None, relative_path: str = "") -> None:
+    def crawl_and_download(
+        self, current_url: Optional[str] = None, relative_path: str = ""
+    ) -> None:
         """
         Recursively crawl directories and download all files.
 
