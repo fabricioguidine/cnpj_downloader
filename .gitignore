@@ -24,11 +24,15 @@ wheels/
 .installed.cfg
 *.egg
 
+# Test / tooling caches
+.pytest_cache/
+
 # Virtual environments
 venv/
 env/
 ENV/
 .venv
+.venv/
 
 # IDE
 .vscode/
@@ -43,16 +47,3 @@ Thumbs.db
 
 # Logs
 *.log
-
-# Test and tooling caches
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-
-# Claude
-CLAUDE.md
-

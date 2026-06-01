@@ -1,10 +1,11 @@
-"""End-to-end CLI test: runs main.py as a subprocess with network mocked.
+"""End-to-end CLI test: runs the entry point as a subprocess with network mocked.
 
 A `sitecustomize.py` shim is placed on PYTHONPATH so it is imported
-automatically by the child interpreter before main.py runs. The shim patches
-`requests` in the crawler/downloader modules to serve synthetic listings and
-file bytes, so the whole pipeline (entry point -> manager -> crawler ->
-downloader -> filesystem) runs end to end with zero network access.
+automatically by the child interpreter before the app runs. The shim patches
+`requests` (crawler and downloader share one `requests` module object) to serve
+synthetic listings and file bytes, so the whole pipeline (entry point ->
+manager -> crawler -> downloader -> filesystem) runs end to end with zero
+network access.
 """
 import os
 import subprocess
@@ -50,14 +51,25 @@ class _Get:
         yield FILE_BODY
 
 
-crawler.requests.get = lambda url, timeout=None: _Listing(LISTINGS[url])
-downloader.requests.get = lambda url, stream=False: _Get()
-downloader.requests.head = lambda url, allow_redirects=True, timeout=None: _Head()
+def _fake_get(url, timeout=None, stream=False, **kwargs):
+    if stream:
+        return _Get()
+    return _Listing(LISTINGS[url])
+
+
+def _fake_head(url, allow_redirects=True, timeout=None):
+    return _Head()
+
+
+# Both modules reference the same requests module; patch via either handle.
+crawler.requests.get = _fake_get
+downloader.requests.get = _fake_get
+downloader.requests.head = _fake_head
 '''
 
 _RUNNER = (
-    "from src.manager import CNPJDownloaderManager\n"
     "import os\n"
+    "from src.manager import CNPJDownloaderManager\n"
     "CNPJDownloaderManager(\n"
     "    base_url='https://fake.test/cnpj/',\n"
     "    output_dir=os.environ['CNPJ_OUTPUT_DIR'],\n"
