@@ -1,7 +1,7 @@
 """Tests for src.utils formatting/calculation helpers."""
 import pytest
 
-from src.utils import format_seconds, calculate_average_speed, format_file_size
+from src.utils import calculate_average_speed, format_file_size, format_seconds
 
 
 @pytest.mark.parametrize(

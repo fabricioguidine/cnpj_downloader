@@ -1,8 +1,8 @@
 """Tests for src.manager orchestration (network mocked via requests).
 
 Both crawler and downloader do `import requests`, so they share one
-`requests` module object. The fakes therefore route on the call site:
-listing requests pass a `timeout` kwarg, file downloads pass `stream=True`.
+`requests` module object. The fakes route on the call site: listing requests
+have no `stream`, file downloads pass `stream=True`.
 """
 from pathlib import Path
 
@@ -55,7 +55,6 @@ class _GetResponse:
 
 
 def _fake_get(url, timeout=None, stream=False, **kwargs):
-    # Listings are fetched without streaming; files with stream=True.
     if stream:
         return _GetResponse()
     return _ListingResponse(_LISTINGS[url])
@@ -77,6 +76,11 @@ def test_manager_creates_output_dir(tmp_path):
     assert out.is_dir()
 
 
+def test_manager_output_dir_is_path(tmp_path):
+    mgr = CNPJDownloaderManager(base_url="https://fake.test/cnpj/", output_dir=str(tmp_path))
+    assert isinstance(mgr.output_dir, Path)
+
+
 def test_manager_recursive_crawl_and_download(tmp_path, monkeypatch):
     out = tmp_path / "data"
     _patch_network(monkeypatch)
@@ -93,8 +97,3 @@ def test_manager_recursive_crawl_and_download(tmp_path, monkeypatch):
     assert nested_file.read_bytes() == _FILE_BODY
     # Two files downloaded -> two speed samples recorded.
     assert len(mgr.downloader.download_speeds) == 2
-
-
-def test_manager_output_dir_is_path(tmp_path):
-    mgr = CNPJDownloaderManager(base_url="https://fake.test/cnpj/", output_dir=str(tmp_path))
-    assert isinstance(mgr.output_dir, Path)

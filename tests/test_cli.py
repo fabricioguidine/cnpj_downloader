@@ -7,6 +7,7 @@ synthetic listings and file bytes, so the whole pipeline (entry point ->
 manager -> crawler -> downloader -> filesystem) runs end to end with zero
 network access.
 """
+import importlib
 import os
 import subprocess
 import sys
@@ -61,7 +62,6 @@ def _fake_head(url, allow_redirects=True, timeout=None):
     return _Head()
 
 
-# Both modules reference the same requests module; patch via either handle.
 crawler.requests.get = _fake_get
 downloader.requests.get = _fake_get
 downloader.requests.head = _fake_head
@@ -114,7 +114,5 @@ def test_cli_end_to_end(tmp_path):
 
 def test_main_entrypoint_importable():
     """main.main must be importable and wired to the manager."""
-    import importlib
-
     main_mod = importlib.import_module("main")
     assert callable(main_mod.main)
