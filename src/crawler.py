@@ -45,7 +45,7 @@ class Crawler:
         links = []
 
         for a in soup.find_all("a", href=True):
-            href = a["href"]
+            href = str(a["href"])
             # Skip navigation links
             if href.startswith("?") or href.startswith("/"):
                 continue

@@ -12,7 +12,7 @@ from src.downloader import Downloader
 class CNPJDownloaderManager:
     """Main manager for CNPJ dataset downloading."""
 
-    def __init__(self, base_url: str = BASE_URL, output_dir: str = OUTPUT_DIR):
+    def __init__(self, base_url: str = BASE_URL, output_dir: str | Path = OUTPUT_DIR):
         """
         Initialize the download manager.
 
