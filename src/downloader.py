@@ -1,17 +1,14 @@
 """
 File downloader module with progress tracking and resume capability.
 """
-
-import contextlib
-import os
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import requests
 
-from src.config import CHUNK_SIZE, HEAD_TIMEOUT
-from src.utils import calculate_average_speed, format_seconds
+from src.config import HEAD_TIMEOUT, CHUNK_SIZE
+from src.utils import format_seconds, calculate_average_speed
 
 
 class Downloader:
@@ -39,7 +36,7 @@ class Downloader:
             print(f"[ERROR] Could not get remote size: {e}")
             return None
 
-    def should_skip_download(self, file_path: str, remote_size: Optional[int]) -> bool:
+    def should_skip_download(self, file_path: Union[str, Path], remote_size: Optional[int]) -> bool:
         """
         Check if a file should be skipped (already downloaded and complete).
 
@@ -50,10 +47,11 @@ class Downloader:
         Returns:
             True if file should be skipped, False otherwise
         """
-        if not os.path.exists(file_path):
+        file_path = Path(file_path)
+        if not file_path.exists():
             return False
 
-        local_size = os.path.getsize(file_path)
+        local_size = file_path.stat().st_size
 
         if remote_size and local_size == remote_size:
             print(f"[SKIP] {file_path} already downloaded (size matches)")
@@ -62,7 +60,7 @@ class Downloader:
             print(f"[RE-DOWNLOAD] {file_path} (size mismatch or incomplete)")
             return False
 
-    def download_file(self, url: str, save_path: str) -> bool:
+    def download_file(self, url: str, save_path: Union[str, Path]) -> bool:
         """
         Download a file from URL to local path.
 
@@ -73,8 +71,10 @@ class Downloader:
         Returns:
             True if download succeeded, False otherwise
         """
+        save_path = Path(save_path)
+
         # Ensure directory exists
-        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Check remote file size
         remote_size = self.get_remote_file_size(url)
@@ -94,7 +94,7 @@ class Downloader:
                         f.write(chunk)
 
             elapsed = time.time() - start
-            downloaded_mb = os.path.getsize(save_path) / (1024 * 1024)
+            downloaded_mb = save_path.stat().st_size / (1024 * 1024)
             speed = downloaded_mb / elapsed if elapsed > 0 else 0
             self.download_speeds.append(speed)
 
@@ -104,16 +104,18 @@ class Downloader:
             avg_speed = calculate_average_speed(self.download_speeds)
             if remote_size and avg_speed > 0:
                 est_time = format_seconds((remote_size / (1024 * 1024)) / avg_speed)
-                print(f"[ESTIMATE] Avg Speed: {avg_speed:.2f} MB/s — Est. for similar: {est_time}")
+                print(f"[ESTIMATE] Avg Speed: {avg_speed:.2f} MB/s - Est. for similar: {est_time}")
 
             return True
 
         except Exception as e:
             print(f"[ERROR] Failed to download {url}: {e}")
             # Remove partial file on error
-            if os.path.exists(save_path):
-                with contextlib.suppress(Exception):
-                    os.remove(save_path)
+            if save_path.exists():
+                try:
+                    save_path.unlink()
+                except OSError:
+                    pass
             return False
 
     def get_average_speed(self) -> float:
