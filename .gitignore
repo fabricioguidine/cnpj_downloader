@@ -47,5 +47,3 @@ Thumbs.db
 
 # Logs
 *.log
-*.pyc
-cnpj_data/

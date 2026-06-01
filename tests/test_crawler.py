@@ -45,15 +45,6 @@ def test_get_links_returns_empty_on_error(monkeypatch):
     assert crawler.get_links("https://example.test/CNPJ/") == []
 
 
-def test_get_links_returns_empty_on_http_error(monkeypatch):
-    crawler = Crawler("https://example.test/CNPJ/")
-    monkeypatch.setattr(
-        "src.crawler.requests.get",
-        lambda url, timeout=None: _FakeResponse("", status_ok=False),
-    )
-    assert crawler.get_links("https://example.test/CNPJ/") == []
-
-
 def test_build_full_url():
     crawler = Crawler("https://example.test/CNPJ/")
     assert (

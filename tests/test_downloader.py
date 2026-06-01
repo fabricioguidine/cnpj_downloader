@@ -1,6 +1,8 @@
 """Tests for src.downloader (network mocked, filesystem under tmp_path)."""
 from pathlib import Path
 
+import pytest
+
 from src.downloader import Downloader
 
 
