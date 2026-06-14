@@ -2,7 +2,6 @@
 Main manager class that orchestrates crawling and downloading.
 """
 
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -14,7 +13,7 @@ from src.downloader import Downloader
 class CNPJDownloaderManager:
     """Main manager for CNPJ dataset downloading."""
 
-    def __init__(self, base_url: str = BASE_URL, output_dir: str = OUTPUT_DIR):
+    def __init__(self, base_url: str = BASE_URL, output_dir: str | Path = OUTPUT_DIR):
         """
         Initialize the download manager.
 
@@ -23,12 +22,12 @@ class CNPJDownloaderManager:
             output_dir: Directory to save downloaded files
         """
         self.base_url = base_url
-        self.output_dir = output_dir
+        self.output_dir = Path(output_dir)
         self.crawler = Crawler(base_url)
         self.downloader = Downloader()
 
         # Ensure output directory exists
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def crawl_and_download(
         self, current_url: Optional[str] = None, relative_path: str = ""
@@ -52,14 +51,14 @@ class CNPJDownloaderManager:
             if link.endswith("/"):
                 # It's a directory - recurse
                 print(f"[ENTER DIR] {full_url}")
-                sub_path = os.path.join(relative_path, link.strip("/"))
+                sub_path = str(Path(relative_path) / link.strip("/"))
                 self.crawl_and_download(full_url, sub_path)
             else:
                 # It's a file - download it
                 print(f"[FOUND FILE] {link}")
-                local_folder = os.path.join(self.output_dir, relative_path)
-                Path(local_folder).mkdir(parents=True, exist_ok=True)
-                file_path = os.path.join(local_folder, link)
+                local_folder = self.output_dir / relative_path
+                local_folder.mkdir(parents=True, exist_ok=True)
+                file_path = local_folder / link
                 self.downloader.download_file(full_url, file_path)
 
     def run(self) -> None:

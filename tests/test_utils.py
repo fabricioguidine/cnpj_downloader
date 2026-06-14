@@ -1,49 +1,45 @@
-"""Tests for `src.utils` pure helper functions."""
+"""Tests for src.utils formatting/calculation helpers."""
 
 import pytest
 
-from src.utils import calculate_average_speed, format_file_size, format_seconds
+from src.utils import format_seconds, calculate_average_speed, format_file_size
 
 
-class TestFormatSeconds:
-    def test_zero(self):
-        assert format_seconds(0) == "00:00:00"
-
-    def test_under_one_minute(self):
-        assert format_seconds(45) == "00:00:45"
-
-    def test_one_minute(self):
-        assert format_seconds(60) == "00:01:00"
-
-    def test_one_hour_with_change(self):
-        assert format_seconds(3661) == "01:01:01"
-
-    def test_float_truncates_to_int(self):
-        assert format_seconds(59.9) == "00:00:59"
+@pytest.mark.parametrize(
+    "seconds,expected",
+    [
+        (0, "00:00:00"),
+        (59, "00:00:59"),
+        (60, "00:01:00"),
+        (3661, "01:01:01"),
+        (3600 * 25, "25:00:00"),
+        (90.9, "00:01:30"),
+    ],
+)
+def test_format_seconds(seconds, expected):
+    assert format_seconds(seconds) == expected
 
 
-class TestCalculateAverageSpeed:
-    def test_empty_returns_zero(self):
-        assert calculate_average_speed([]) == 0.0
-
-    def test_single_value(self):
-        assert calculate_average_speed([5.0]) == 5.0
-
-    def test_multiple_values(self):
-        assert calculate_average_speed([2.0, 4.0, 6.0]) == pytest.approx(4.0)
+def test_calculate_average_speed_empty():
+    assert calculate_average_speed([]) == 0.0
 
 
-class TestFormatFileSize:
-    def test_bytes(self):
-        assert format_file_size(512) == "512.00 B"
+def test_calculate_average_speed_values():
+    assert calculate_average_speed([2.0, 4.0, 6.0]) == 4.0
 
-    def test_kilobytes(self):
-        assert format_file_size(2048) == "2.00 KB"
 
-    def test_megabytes(self):
-        assert format_file_size(5 * 1024 * 1024) == "5.00 MB"
-
-    def test_gigabytes(self):
-        result = format_file_size(3 * 1024**3)
-        assert result.endswith("GB")
-        assert result.startswith("3.")
+@pytest.mark.parametrize(
+    "size,expected",
+    [
+        (0, "0.00 B"),
+        (512, "512.00 B"),
+        (1024, "1.00 KB"),
+        (1536, "1.50 KB"),
+        (1024**2, "1.00 MB"),
+        (1024**3, "1.00 GB"),
+        (1024**4, "1.00 TB"),
+        (1024**5, "1.00 PB"),
+    ],
+)
+def test_format_file_size(size, expected):
+    assert format_file_size(size) == expected

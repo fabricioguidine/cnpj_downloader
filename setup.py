@@ -8,7 +8,9 @@ with open("README.md", encoding="utf-8") as fh:
     long_description = fh.read()
 
 with open("requirements.txt", encoding="utf-8") as fh:
-    requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+    requirements = [
+        line.strip() for line in fh if line.strip() and not line.startswith("#")
+    ]
 
 setup(
     name="cnpj-downloader",
